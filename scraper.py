@@ -4,7 +4,10 @@ import json
 def get_bazos_ads(query, limit=80):
     url = "https://www.bazos.cz/api/v1/ads.php"
 
-    params = {"query": query, "offset": 0, "limit": limit}
+    params = {"query": query, 
+              "offset": 0, 
+              "limit": limit
+    }
     response = requests.get(url, params=params)
 
     if response.status_code == 200:
@@ -26,13 +29,13 @@ def fetch_bazos_ad_details(ad_id):
         return None
 
 def fetch_sbazar_ads(query, limit=80):
-    base_url = "https://sbazar.cz/api/v1/adverts/search"
+    url = "https://sbazar.cz/api/v1/adverts/search"
     params = {
         "limit": limit,
         "offset": 0,
         "phrase": query
     }
-    response = requests.get(base_url, params=params)
+    response = requests.get(url, params=params)
     
     if response.status_code == 200:
         return json.loads(response.text)
@@ -42,8 +45,10 @@ def fetch_sbazar_ads(query, limit=80):
         return []
 
 def fetch_sbazar_ad_details(ad_id):
-    url = f"https://sbazar.cz/api/v1/adverts/{ad_id}"
-    response = requests.get(url)
+    url = f"https://sbazar.cz/api/v1/adverts/"
+    params = {"ad_id": ad_id}
+
+    response = requests.get(url,params)
     
     if response.status_code == 200:
         return response.json()
