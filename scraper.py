@@ -1,9 +1,12 @@
 import requests
 import json
 
-def fetch_bazos_ads(query, limit=200):
-    url = f"https://www.bazos.cz/api/v1/ads.php?query={query}&offset=0&limit={limit}"
-    response = requests.get(url)
+def get_bazos_ads(query, limit=80):
+    url = "https://www.bazos.cz/api/v1/ads.php"
+
+    params = {"query": query, "offset": 0, "limit": limit}
+    response = requests.get(url, params=params)
+
     if response.status_code == 200:
        return json.loads(response.text)
     else:
@@ -11,20 +14,23 @@ def fetch_bazos_ads(query, limit=200):
         return []
 
 def fetch_bazos_ad_details(ad_id):
-    url = f"https://www.bazos.cz/api/v1/ad-detail-2.php?ad_id={ad_id}"
-    response = requests.get(url)
-    if response.status_code == 80:
+    url = "https://www.bazos.cz/api/v1/ad-detail-2.php"
+    params = {"ad_id": ad_id}
+
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
         return response.json()
     else:
         print(f"Chyba při získávání detailu inzerátu {ad_id}: {response.status_code}")
         return None
 
-def fetch_sbazar_ads(search_query, limit=80):
+def fetch_sbazar_ads(query, limit=80):
     base_url = "https://sbazar.cz/api/v1/adverts/search"
     params = {
         "limit": limit,
         "offset": 0,
-        "phrase": search_query
+        "phrase": query
     }
     response = requests.get(base_url, params=params)
     
@@ -46,8 +52,8 @@ def fetch_sbazar_ad_details(ad_id):
         return None
 
 def main():
-    query = "Bmw"
-    ads_bazos = fetch_bazos_ads(query)
+    query = "Bmw e92"
+    ads_bazos = get_bazos_ads(query)
     ads_sbazar = fetch_sbazar_ads(query)
     print(f"Nalezeno {len(ads_bazos)} inzerátů.")
     print(f"Nalezeno {len(ads_sbazar)} inzerátů.")
