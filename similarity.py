@@ -1,33 +1,36 @@
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+
+# Použij veřejně dostupný model
+model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", cache_folder="./models")
+# Nebo zkus přesnější model:
+# model = SentenceTransformer("distiluse-base-multilingual-cased-v2")
 
 def compute_similarity(user_item, ads):
     """
-    user_item: dict obsahující {"title": ..., "description": ..., 
+    user_item: dict obsahující {"title": ..., "description": ...}
     ads: seznam inzerátů ze `data_fetcher.py`
     """
 
     results = []
 
-    # Připravíme texty pro TF-IDF (název + popis)
-    user_text = user_item["title"] + " " + user_item["description"]
+    # Připravíme texty (název + popis)
+    user_text = user_item["title"] + " " + (user_item["description"] if user_item["description"] else "")
     ad_texts = [ad["title"] + " " + (ad["description"] if ad["description"] else "") for ad in ads]
 
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform([user_text] + ad_texts)
-    
-    similarities = cosine_similarity(tfidf_matrix[0], tfidf_matrix[1:]).flatten()
+    # Vytvoříme embeddingy
+    all_texts = [user_text] + ad_texts
+    embeddings = model.encode(all_texts, convert_to_tensor=True)
 
+    # Spočítáme cosine similarity
+    similarities = cosine_similarity(embeddings[0].reshape(1, -1), embeddings[1:]).flatten()
+
+    # Seřazení výsledků
     for i, ad in enumerate(ads):
-        similarity_score = similarities[i]
-
-        final_score = similarity_score
-        
         results.append({
             "ad": ad,
-            "similarity_score": final_score
+            "similarity_score": similarities[i]
         })
 
-    # Seřadíme od nejpodobnějšího
     results.sort(key=lambda x: x["similarity_score"], reverse=True)
     return results

@@ -4,8 +4,8 @@ from similarity import compute_similarity
 def main():
     # Simulace uživatelského vstupu
     user_item = {
-        "title": "Bmw e92 325i",
-        "description": "Prodám BMW E92 325i 2007. Najeto 240 000 km. Servisní historie. Olej měněn každých 10 000km. Původ Německo. Bohatá výbava. Manuál.",
+        "title": "Mercedes-Benz E 220",
+        "description": "Prodám Mercedes E 220, rok výroby 2018, najeto 150 000 km. Vůz je v dobrém stavu, pravidelně servisován.",
     }
 
     print("📡 Stahuji inzeráty...")
