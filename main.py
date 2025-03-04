@@ -3,8 +3,18 @@ from pydantic import BaseModel
 from typing import List
 from data_fetcher import fetch_all_ads
 from similarity import compute_similarity
+from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Povolí požadavky ze všech domén (změň na konkrétní doménu pro vyšší bezpečnost)
+    allow_credentials=True,
+    allow_methods=["*"],  # Povolí všechny HTTP metody (GET, POST, OPTIONS atd.)
+    allow_headers=["*"],  # Povolí všechny hlavičky
+)
 
 # Definice datového modelu requestu
 class UserItem(BaseModel):
