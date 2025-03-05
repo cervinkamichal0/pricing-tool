@@ -23,7 +23,7 @@ def compute_similarity(user_item, ads):
     embeddings = model.encode(all_texts, convert_to_tensor=True)
 
     # Spočítáme cosine similarity
-    similarities = cosine_similarity(embeddings[0].reshape(1, -1), embeddings[1:]).flatten()
+    similarities = cosine_similarity(embeddings[0].cpu().reshape(1, -1), embeddings[1:]).flatten()
 
     # Seřazení výsledků
     for i, ad in enumerate(ads):

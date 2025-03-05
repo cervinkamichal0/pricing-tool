@@ -35,7 +35,7 @@ def get_similar_ads(user_item: UserItem):
     ads = fetch_all_ads(user_item.title)
     
     print(f"Porovnávám {len(ads)} inzerátů s uživatelskou položkou...")
-    results = compute_similarity(user_item.dict(), ads)
+    results = compute_similarity(user_item.model_dump(), ads)
     
     # Vrátíme pouze top 5 výsledků
     return [
