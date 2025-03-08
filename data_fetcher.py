@@ -84,7 +84,10 @@ class SbazarAPIClient(BaseAPIClient):
                 "title": result.get("name", ""),
                 "price": int(price),
                 "description": result.get("description", ""),
-                "images": [image["url"] for image in result.get("images", [])],
+                "images": [
+                "https:" + image["url"] + "?fl=exf|res,1024,768,1|wrm,/watermark/sbazar.png,10,10|webp,75" 
+                for image in result.get("images", [])
+                ],
                 "url": f"https://www.sbazar.cz/name/detail/{ad_id}",
             }
         return None

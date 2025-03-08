@@ -1,48 +1,76 @@
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 import statistics
+import torch
+from PIL import Image
+from torchvision import transforms
+from transformers import CLIPProcessor, CLIPModel
+import requests
+from io import BytesIO
 
-# Použij veřejně dostupný model
-model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", cache_folder="./models")
-# Nebo zkus přesnější model:
-# model = SentenceTransformer("distiluse-base-multilingual-cased-v2")
+# Modely pro text a obrázky
+text_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", cache_folder="./models")
+image_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
+processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-def compute_similarity(user_item, ads):
+# Transformace obrázků pro CLIP
+
+
+def preprocess_image(image_path_or_url):
+    # Pokud je argument URL, stáhneme obrázek
+    if image_path_or_url.startswith("http") | image_path_or_url.startswith("https"):
+        response = requests.get(image_path_or_url)
+        image = Image.open(BytesIO(response.content)).convert("RGB")
+    else:
+        # Pokud je to lokální cesta, stahovat ho nemusíme
+        image = Image.open(image_path_or_url).convert("RGB")
+    
+    return processor(images=image, return_tensors="pt")["pixel_values"]
+
+
+def compute_similarity(user_item, user_image_path, ads):
     """
-    user_item: dict obsahující {"title": ..., "description": ...}
+    Porovnání textu a obrázku s existujícími inzeráty.
+    user_item: {"title": ..., "description": ...}
+    user_image_path: cesta k nahranému obrázku
     ads: seznam inzerátů ze `data_fetcher.py`
     """
 
     results = []
 
-    # Připravíme texty (název + popis)
+    #1) Porovnání textu
     user_text = user_item["title"] + " " + (user_item["description"] if user_item["description"] else "")
     ad_texts = [ad["title"] + " " + (ad["description"] if ad["description"] else "") for ad in ads]
 
-    # Vytvoříme embeddingy
     all_texts = [user_text] + ad_texts
-    embeddings = model.encode(all_texts, convert_to_tensor=True)
+    text_embeddings = text_model.encode(all_texts, convert_to_tensor=True)
 
-    # Spočítáme cosine similarity
-    similarities = cosine_similarity(embeddings[0].cpu().reshape(1, -1), embeddings[1:]).flatten()
+    text_similarities = cosine_similarity(text_embeddings[0].cpu().reshape(1, -1), text_embeddings[1:]).flatten()
 
-    # Seřazení výsledků
+    #2) Porovnání obrázků
+    user_image_embedding = image_model.get_image_features(preprocess_image(user_image_path)).detach().numpy()
+
+    image_similarities = []
+    for ad in ads:
+        if "images" in ad and len(ad["images"]) > 0:  # Kontrola, zda seznam obrázků není prázdný
+            ad_image_embedding = image_model.get_image_features(preprocess_image(ad["images"][0])).detach().numpy()
+            similarity = cosine_similarity(user_image_embedding.reshape(1, -1), ad_image_embedding.reshape(1, -1)).flatten()[0]
+        else:
+            similarity = 0  # Pokud inzerát nemá obrázek
+
+        image_similarities.append(similarity)
+
+    #3) Kombinace textu a obrázku
     for i, ad in enumerate(ads):
+        combined_similarity = (text_similarities[i] * 0.7) + (image_similarities[i] * 0.3)  # 70 % text, 30 % obrázek
         results.append({
             "ad": ad,
-            "similarity_score": similarities[i]
+            "similarity_score": combined_similarity
         })
 
     results.sort(key=lambda x: x["similarity_score"], reverse=True)
     return results
 
 def compute_price(similar_ads):
-    """
-    similar_ads: seznam výsledků z `compute_similarity`
-    """
     prices = [ad["ad"]["price"] for ad in similar_ads if "price" in ad["ad"]]
-    if prices:
-        return int(statistics.mean(prices))
-    return None
-
-
+    return int(statistics.mean(prices)) if prices else None

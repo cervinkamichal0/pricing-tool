@@ -40,10 +40,10 @@ async def get_similar_ads(
 ):
     """API endpoint pro získání nejpodobnějších inzerátů podle textu a obrázku."""
 
-    print("Stahuji inzeráty...")
+    print(title,"\n", description, "\n",file.filename)
     ads = fetch_all_ads(title)
 
-    print(f"Porovnávám {len(ads)} inzerátů s uživatelskou položkou...")
+    print(f"Porovnávám {len(ads)}...")
 
     # Uložení nahraného obrázku
     file_location = f"{UPLOAD_FOLDER}/{file.filename}"
@@ -52,7 +52,7 @@ async def get_similar_ads(
 
     # Porovnání textové podobnosti
     user_item = {"title": title, "description": description}
-    text_results = compute_similarity(user_item, ads)
+    text_results = compute_similarity(user_item, file_location, ads)
 
     # Vybereme top 3 podle textu
     top_results = text_results[:3]
