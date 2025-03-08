@@ -1,5 +1,6 @@
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+import statistics
 
 # Použij veřejně dostupný model
 model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", cache_folder="./models")
@@ -34,3 +35,14 @@ def compute_similarity(user_item, ads):
 
     results.sort(key=lambda x: x["similarity_score"], reverse=True)
     return results
+
+def compute_price(similar_ads):
+    """
+    similar_ads: seznam výsledků z `compute_similarity`
+    """
+    prices = [ad["ad"]["price"] for ad in similar_ads if "price" in ad["ad"]]
+    if prices:
+        return int(statistics.mean(prices))
+    return None
+
+

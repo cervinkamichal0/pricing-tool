@@ -1,8 +1,8 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from typing import List
+from typing import List, Optional
 from data_fetcher import fetch_all_ads
-from similarity import compute_similarity
+from similarity import compute_price, compute_similarity
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -28,7 +28,12 @@ class AdResponse(BaseModel):
     url: str
     similarity_score: float
 
-@app.post("/similar_ads", response_model=List[AdResponse])
+# Datový model odpovědi API
+class SimilarAdsResponse(BaseModel):
+    estimated_price: Optional[int]  # Vypočítaná cena
+    similar_ads: List[AdResponse]
+
+@app.post("/similar_ads", response_model=SimilarAdsResponse)
 def get_similar_ads(user_item: UserItem):
     """API endpoint pro získání nejpodobnějších inzerátů."""
     print("Stahuji inzeráty...")
@@ -36,17 +41,28 @@ def get_similar_ads(user_item: UserItem):
     
     print(f"Porovnávám {len(ads)} inzerátů s uživatelskou položkou...")
     results = compute_similarity(user_item.model_dump(), ads)
+
+    # Vybereme pouze top 3 výsledků
+    top_results = results[:3]
+
+    estimated_price = compute_price(top_results)
     
-    # Vrátíme pouze top 5 výsledků
-    return [
-        AdResponse(
-            title=result["ad"]["title"],
-            price=result["ad"].get("price", 0),  # Defaultní hodnota, pokud chybí
-            url=result["ad"].get("url", ""),
-            similarity_score=result["similarity_score"]
+    response = SimilarAdsResponse(
+            estimated_price=estimated_price,
+            similar_ads=[
+                AdResponse(
+                    title=result["ad"]["title"],
+                    price=result["ad"].get("price", 0),
+                    url=result["ad"].get("url", ""),
+                    similarity_score=result["similarity_score"]
+                )
+                for result in top_results
+            ]
         )
-        for result in results[:5]
-    ]
+
+    return response
+    
+
 
 # Spuštění API (pro lokální testování)
 if __name__ == "__main__":
