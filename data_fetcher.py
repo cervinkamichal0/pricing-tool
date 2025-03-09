@@ -55,6 +55,7 @@ class BazosAPIClient(BaseAPIClient):
                 "price": int(price),
                 "description": response_json.get("description", ""),
                 "images": response_json.get("images", []),
+                "date": response_json.get("from", ""),
                 "url": response_json.get("url", ""),
             }
         return None
@@ -88,6 +89,7 @@ class SbazarAPIClient(BaseAPIClient):
                 "https:" + image["url"] + "?fl=exf|res,1024,768,1|wrm,/watermark/sbazar.png,10,10|webp,75" 
                 for image in result.get("images", [])
                 ],
+                "date": result.get("create_date", ""),
                 "url": f"https://www.sbazar.cz/name/detail/{ad_id}",
             }
         return None

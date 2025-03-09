@@ -30,6 +30,7 @@ class AdResponse(BaseModel):
 
 class SimilarAdsResponse(BaseModel):
     estimated_price: Optional[int]
+    estimated_quick_sale_price: Optional[int]
     similar_ads: List[AdResponse]
 
 @app.post("/similar_ads", response_model=SimilarAdsResponse)
@@ -57,12 +58,18 @@ async def get_similar_ads(
     # Vybereme top 3 podle textu
     top_results = text_results[:3]
 
-    # Spočítáme průměrnou cenu
+    # Spočítáme průměrnou cenu top 3 inzerátů
     estimated_price = compute_price(top_results)
+
+    estimated_quick_sale_price = compute_price(top_results, quick_sale=True)
+
+    if estimated_price < estimated_quick_sale_price:
+        estimated_quick_sale_price = estimated_price
 
     # Sestavení odpovědi
     response = SimilarAdsResponse(
         estimated_price=estimated_price,
+         estimated_quick_sale_price=estimated_quick_sale_price,
         similar_ads=[
             AdResponse(
                 title=result["ad"]["title"],

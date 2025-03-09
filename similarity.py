@@ -1,9 +1,7 @@
+from datetime import datetime
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
-import statistics
-import torch
 from PIL import Image
-from torchvision import transforms
 from transformers import CLIPProcessor, CLIPModel
 import requests
 from io import BytesIO
@@ -71,6 +69,38 @@ def compute_similarity(user_item, user_image_path, ads):
     results.sort(key=lambda x: x["similarity_score"], reverse=True)
     return results
 
-def compute_price(similar_ads):
-    prices = [ad["ad"]["price"] for ad in similar_ads if "price" in ad["ad"]]
-    return int(statistics.mean(prices)) if prices else None
+def convert_date(date_string):
+    return datetime.strptime(date_string, "%a, %d %b %Y %H:%M:%S %z").strftime("%Y-%m-%d")
+
+def compute_price(similar_ads, quick_sale=False):
+    """
+    Vypočítá odhadovanou cenu na základě podobných inzerátů.
+    Pokud je quick_sale=True, starší inzeráty budou mít nižší váhu.
+    """
+    prices = []
+    weights = []
+
+    for ad in similar_ads:
+        if "price" in ad["ad"] and "date" in ad["ad"]:
+            price = ad["ad"]["price"]
+
+            date_str = ad["ad"]["date"]
+
+            try:
+                date_posted = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z").date()
+            except ValueError:
+                date_posted = datetime.strptime(date_str, "%Y-%m-%d").date()
+
+            days_listed = (datetime.today().date() - date_posted).days
+
+            # Výpočet váhy na základě stáří inzerátu
+            weight = max(1.0, 30 / (days_listed + 1)) if quick_sale else 1.0
+            prices.append(price)
+            weights.append(weight)
+
+    if not prices:
+        return None
+
+    # Vážený průměr
+    weighted_price = sum(p * w for p, w in zip(prices, weights)) / sum(weights)
+    return int(weighted_price)
