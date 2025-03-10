@@ -64,7 +64,7 @@ async def get_similar_ads(
     estimated_quick_sale_price = compute_price(top_results, quick_sale=True)
 
     if estimated_price < estimated_quick_sale_price:
-        estimated_quick_sale_price = estimated_price
+        estimated_quick_sale_price = int(estimated_quick_sale_price * 0.9)  # Sleva 10 % pro quick sale
 
     # Sestavení odpovědi
     response = SimilarAdsResponse(
@@ -80,6 +80,8 @@ async def get_similar_ads(
             for result in top_results
         ]
     )
+
+    print(response)
 
     return response
 
