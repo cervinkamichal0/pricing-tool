@@ -44,6 +44,14 @@ async def get_similar_ads(
     print(title,"\n", description, "\n",file.filename)
     ads = fetch_all_ads(title)
 
+    if ads is None or len(ads) == 0:
+        print ("Nebyly nalezeny žádné inzeráty.")
+        return SimilarAdsResponse(
+            estimated_price=None,
+            estimated_quick_sale_price=None,
+            similar_ads=[]
+        )
+
     print(f"Porovnávám {len(ads)}...")
 
     # Uložení nahraného obrázku
@@ -64,7 +72,7 @@ async def get_similar_ads(
     estimated_quick_sale_price = compute_price(top_results, quick_sale=True)
 
     if estimated_price < estimated_quick_sale_price:
-        estimated_quick_sale_price = estimated_price
+        estimated_quick_sale_price = int(estimated_quick_sale_price * 0.9)  # Sleva 10 % pro quick sale
 
     # Sestavení odpovědi
     response = SimilarAdsResponse(

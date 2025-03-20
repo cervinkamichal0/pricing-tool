@@ -69,8 +69,21 @@ def compute_similarity(user_item, user_image_path, ads):
     results.sort(key=lambda x: x["similarity_score"], reverse=True)
     return results
 
-def convert_date(date_string):
-    return datetime.strptime(date_string, "%a, %d %b %Y %H:%M:%S %z").strftime("%Y-%m-%d")
+def parse_date(date_str):
+    """Detekuje a správně naparsuje datum podle formátu"""
+    try:
+        # ISO 8601 (např. '2025-02-28T17:24:13')
+        return datetime.fromisoformat(date_str).date()
+    except ValueError:
+        pass  # Pokračujeme na RFC 2822
+
+    try:
+        # RFC 2822 (např. 'Mon, 10 Mar 2025 21:10:44 +0000')
+        return datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z").date()
+    except ValueError:
+        pass  # Pokud nevyhovuje žádný formát, vrátíme None
+
+    return None  # Neplatné datu
 
 def compute_price(similar_ads, quick_sale=False):
     """
@@ -85,18 +98,11 @@ def compute_price(similar_ads, quick_sale=False):
             price = ad["ad"]["price"]
 
             date_str = ad["ad"]["date"]
-
-            try:
-                date_posted = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z").date()
-            except ValueError:
-                try:
-                    date_posted = datetime.strptime(date_str, "%Y-%m-%d").date()
-                except ValueError:
-                    try:
-                        date_posted = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S").date()  # Opravený formát
-                    except ValueError:
-                        print(f"Neznámý formát data: {date_str}")
-                        continue  # Pokud je formát neznámý, přeskočíme
+            date_posted = parse_date(date_str)
+            
+            if date_posted is None:
+                print(f"v inzerátu je špatný formát data: {ad['date']}")
+                continue  # Pokud je datum nevalidní, přeskočíme záznam
 
             days_listed = (datetime.today().date() - date_posted).days
 
