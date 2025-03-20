@@ -66,8 +66,8 @@ async def get_similar_ads(
     # Vybereme top 3 podle textu
     top_results = text_results[:3]
 
-    # Spočítáme průměrnou cenu top 3 inzerátů
-    estimated_price = compute_price(top_results)
+    # Spočítáme průměrnou cenu top 10 inzerátů
+    estimated_price = compute_price(text_results[:10])
 
     estimated_quick_sale_price = compute_price(top_results, quick_sale=True)
 
