@@ -89,7 +89,14 @@ def compute_price(similar_ads, quick_sale=False):
             try:
                 date_posted = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z").date()
             except ValueError:
-                date_posted = datetime.strptime(date_str, "%Y-%m-%d").date()
+                try:
+                    date_posted = datetime.strptime(date_str, "%Y-%m-%d").date()
+                except ValueError:
+                    try:
+                        date_posted = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S").date()  # Opravený formát
+                    except ValueError:
+                        print(f"Neznámý formát data: {date_str}")
+                        continue  # Pokud je formát neznámý, přeskočíme
 
             days_listed = (datetime.today().date() - date_posted).days
 

@@ -81,6 +81,7 @@ async def get_similar_ads(
         ]
     )
 
+    print(response)
     return response
 
 # Spuštění API (pro lokální testování)
