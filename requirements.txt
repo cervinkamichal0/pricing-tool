@@ -3,7 +3,6 @@ scikit-learn
 fastapi
 uvicorn
 typing
-fastapi.middleware.cors
 requests
 sentence_transformers
 PIL
