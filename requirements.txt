@@ -5,6 +5,5 @@ uvicorn
 typing
 requests
 sentence_transformers
-PIL
 transformers
 openai
