@@ -1,5 +1,5 @@
 pydantic
-sklearn
+scikit-learn
 fastapi
 uvicorn
 typing
