@@ -3,14 +3,9 @@ scikit-learn
 fastapi
 uvicorn
 typing
-shutil
-os
 fastapi.middleware.cors
 requests
-datetime
 sentence_transformers
-sklearn.metrics.pairwise
 PIL
 transformers
-io
 openai
