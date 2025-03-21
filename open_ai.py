@@ -2,7 +2,7 @@ import os
 from openai import OpenAI
 
 def suggest_description(ad_title):
-
+    """Generuje strukturu popisu inzerátu pro daný název."""
     client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
     
     chat_completion = client.chat.completions.create(

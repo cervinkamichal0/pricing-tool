@@ -1,5 +1,4 @@
 import requests
-import json
 
 def is_numeric(value):
     if isinstance(value, (int, float)):  
@@ -9,11 +8,13 @@ def is_numeric(value):
     return False
 
 class BaseAPIClient:
+    """Základní třída pro API klienty."""
     BASE_URL = ""
 
 
     @classmethod
     def fetch(cls, endpoint, params=None):
+        """Získá data z API."""
         url = f"{cls.BASE_URL}{endpoint}"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -32,10 +33,12 @@ class BaseAPIClient:
 
 
 class BazosAPIClient(BaseAPIClient):
+    """API klient pro Bazoš."""
     BASE_URL = "https://www.bazos.cz/api/v1/"
 
     @classmethod
     def fetch_ads(cls, query, limit=80):
+        """Získá seznam inzerátů pro Bazoš"""
         response_json = cls.fetch("ads.php", {"query": query, "offset": 0, "limit": limit})
         if isinstance(response_json, list):
             return [item["id"] for item in response_json]
@@ -45,6 +48,7 @@ class BazosAPIClient(BaseAPIClient):
 
     @classmethod
     def fetch_ad_detail(cls, ad_id):
+        """Získá detail inzerátu z Bazoše."""
         response_json = cls.fetch(f"ad-detail-2.php?ad_id={ad_id}", {"ad_id": ad_id})
 
         price = response_json.get("price", "0") if isinstance(response_json, dict) else "0"
@@ -62,10 +66,12 @@ class BazosAPIClient(BaseAPIClient):
 
 
 class SbazarAPIClient(BaseAPIClient):
+    """API klient pro Sbazar."""
     BASE_URL = "https://sbazar.cz/api/v1/"
 
     @classmethod
     def fetch_ads(cls, query, limit=80):
+        """Získá seznam inzerátů pro Sbazar."""
         response_json = cls.fetch("adverts/search", {"limit": limit, "offset": 0, "phrase": query})
         if isinstance(response_json, dict) and "results" in response_json:
             return [ad["id"] for ad in response_json["results"]]
@@ -75,6 +81,7 @@ class SbazarAPIClient(BaseAPIClient):
 
     @classmethod
     def fetch_ad_detail(cls, ad_id):
+        """Získá detail inzerátu ze Sbazaru."""
         response_json = cls.fetch(f"adverts/{ad_id}")
         result = response_json.get("result", {}) if isinstance(response_json, dict) else {}
 
@@ -96,17 +103,18 @@ class SbazarAPIClient(BaseAPIClient):
 
 
 def fetch_all_ads(query):
-    bazos_ads = BazosAPIClient.fetch_ads(query)
-    sbazar_ads = SbazarAPIClient.fetch_ads(query)
+    """Získá seznam inzerátů z Bazoše a Sbazaru."""
+    bazos_ads = BazosAPIClient.fetch_ads(query, limit=30)
+    sbazar_ads = SbazarAPIClient.fetch_ads(query, limit=30)
 
     ads = []
 
-    for ad in bazos_ads[:30]:
+    for ad in bazos_ads:
         ad_detail = BazosAPIClient.fetch_ad_detail(ad)
         if ad_detail:
             ads.append(ad_detail)
 
-    for ad in sbazar_ads[:30]:
+    for ad in sbazar_ads:
         ad_detail = SbazarAPIClient.fetch_ad_detail(ad)
         if ad_detail:
             ads.append(ad_detail)

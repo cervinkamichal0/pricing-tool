@@ -23,17 +23,18 @@ app.add_middleware(
 UPLOAD_FOLDER = "./uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Datový model odpovědi
-class AdResponse(BaseModel):
+# Datový model inzerátu
+class Ad(BaseModel):
     title: str
     price: int
     url: str
     similarity_score: float
 
+# Datový model odpovědi z endpointu /similar_ads
 class SimilarAdsResponse(BaseModel):
     estimated_price: Optional[int]
     estimated_quick_sale_price: Optional[int]
-    similar_ads: List[AdResponse]
+    similar_ads: List[Ad]
 
 @app.post("/similar_ads", response_model=SimilarAdsResponse)
 async def get_similar_ads(
@@ -81,7 +82,7 @@ async def get_similar_ads(
         estimated_price=estimated_price,
          estimated_quick_sale_price=estimated_quick_sale_price,
         similar_ads=[
-            AdResponse(
+            Ad(
                 title=result["ad"]["title"],
                 price=result["ad"].get("price", 0),
                 url=result["ad"].get("url", ""),

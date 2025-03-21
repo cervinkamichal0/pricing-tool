@@ -11,9 +11,6 @@ text_model = SentenceTransformer("paraphrase-multilingual-MiniLM-L12-v2", cache_
 image_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
 processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
 
-# Transformace obrázků pro CLIP
-
-
 def preprocess_image(image_path_or_url):
     # Pokud je argument URL, stáhneme obrázek
     if image_path_or_url.startswith("http") | image_path_or_url.startswith("https"):
@@ -70,7 +67,7 @@ def compute_similarity(user_item, user_image_path, ads):
     return results
 
 def parse_date(date_str):
-    """Detekuje a správně naparsuje datum podle formátu"""
+    """Detekuje a správně parsuje datum podle formátu"""
     try:
         # ISO 8601 (např. '2025-02-28T17:24:13')
         return datetime.fromisoformat(date_str).date()
@@ -83,7 +80,7 @@ def parse_date(date_str):
     except ValueError:
         pass  # Pokud nevyhovuje žádný formát, vrátíme None
 
-    return None  # Neplatné datu
+    return None
 
 def compute_price(similar_ads, quick_sale=False):
     """
