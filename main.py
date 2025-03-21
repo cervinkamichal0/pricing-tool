@@ -5,7 +5,9 @@ import os
 import shutil
 from data_fetcher import fetch_all_ads
 from similarity import compute_price, compute_similarity
+from open_ai import suggest_description
 from fastapi.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
 
@@ -67,12 +69,12 @@ async def get_similar_ads(
     top_results = text_results[:3]
 
     # Spočítáme průměrnou cenu top 10 inzerátů
-    estimated_price = compute_price(text_results[:10])
+    estimated_price = compute_price(text_results[:3])
 
     estimated_quick_sale_price = compute_price(top_results, quick_sale=True)
 
     if estimated_price < estimated_quick_sale_price:
-        estimated_quick_sale_price = int(estimated_quick_sale_price * 0.9)  # Sleva 10 % pro quick sale
+        estimated_quick_sale_price = int(estimated_price * 0.9)  # Sleva 10 % pro quick sale
 
     # Sestavení odpovědi
     response = SimilarAdsResponse(
@@ -91,6 +93,14 @@ async def get_similar_ads(
 
     print(response)
     return response
+
+@app.post("/generate_description",response_model=str)
+async def generate_description(title: str = Form(...)):
+    """API endpoint pro generování popisu inzerátu."""
+
+    result = suggest_description(title)
+    print(result)
+    return result
 
 # Spuštění API (pro lokální testování)
 if __name__ == "__main__":
