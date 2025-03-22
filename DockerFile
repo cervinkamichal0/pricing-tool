@@ -1,0 +1,39 @@
+# Použijeme oficiální Python image
+FROM python:3.10-slim
+
+# Nainstaluj systémové závislosti, které mohou být potřeba
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libatlas-base-dev \
+    libssl-dev \
+    libffi-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    zlib1g-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Nastavení pracovního adresáře
+WORKDIR /app
+
+# Zkopíruj requirements.txt do kontejneru
+COPY requirements.txt .
+
+# Nainstaluj závislosti
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Zkopíruj zbytek aplikace do kontejneru
+COPY . .
+
+# Otevři port pro aplikaci
+EXPOSE 8001
+
+# Spusť FastAPI aplikaci pomocí Uvicorn
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8001"]
+
+# Přijmi build argument
+ARG OPENAI_API_KEY
+
+# Nastav environmentální proměnnou
+ENV OPENAI_API_KEY=${OPENAI_API_KEY}
